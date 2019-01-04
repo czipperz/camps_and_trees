@@ -1,7 +1,16 @@
 use board::*;
 use tile::Tile::*;
 
-/// Fill `Unassigned` slots that can't possibly be `Camp`s with `Grass`.
+/// Fill [`Unassigned`] slots that can't possibly be [`Camp`]s with [`Grass`].
+///
+/// # Examples
+///
+/// ```
+/// # use camps_and_trees::{Board, initialize_grass};
+/// let mut board = Board::new_parse(vec![1, 0, 1], vec![2, 0, 0], " T \nT  \n   ").unwrap();
+/// assert!(initialize_grass(&mut board));
+/// assert_eq!(board.debug(), " T \nT -\n --");
+/// ```
 pub fn initialize_grass(board: &mut Board) -> bool {
     let mut changed = false;
     for row in 0..board.rows.len() {
@@ -37,7 +46,6 @@ mod tests {
     #[test]
     fn initialize_grass_1() {
         let mut board = Board::new_parse(vec![1, 0, 1], vec![2, 0, 0], " T \nT  \n   ").unwrap();
-        assert_eq!(board.debug(), " T \nT  \n   ");
         assert!(initialize_grass(&mut board));
         assert_eq!(board.debug(), " T \nT -\n --");
         assert!(!initialize_grass(&mut board));

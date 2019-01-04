@@ -1,13 +1,7 @@
-pub mod associate_trees;
-pub mod board;
-pub mod fill_camps;
-pub mod fill_zeros;
-pub mod grid;
-pub mod initialize_grass;
-pub mod intersection;
-pub mod tile;
-use board::Board;
+extern crate camps_and_trees;
+use camps_and_trees::Board;
 
+/// Split the input by `,` and parse the pieces as numbers.
 fn read_camps(s: &str) -> Result<Vec<usize>, String> {
     if s.is_empty() {
         Err("Row or column descriptors must not be empty")?
@@ -16,6 +10,9 @@ fn read_camps(s: &str) -> Result<Vec<usize>, String> {
     camps.map_err(|x: std::num::ParseIntError| x.to_string())
 }
 
+/// Analyze the lines of `stdin`.
+///
+/// `lines` should look like `vec![rows, columns, board..]`.
 pub fn analyze_stdin(lines: Vec<String>) -> Result<Board, String> {
     if lines.len() < 3 {
         Err("Too few lines.  There must be at least 3.")?
@@ -25,6 +22,7 @@ pub fn analyze_stdin(lines: Vec<String>) -> Result<Board, String> {
     Board::new_parse(rows, columns, &lines[2..].join("\n"))
 }
 
+/// Get the lines of `stdin`.
 fn get_stdin_lines() -> Result<Vec<String>, String> {
     use std::io::BufRead;
     let stdin = std::io::stdin();
@@ -32,12 +30,14 @@ fn get_stdin_lines() -> Result<Vec<String>, String> {
     lines.map_err(|x| x.to_string())
 }
 
+/// Attempt to run the application's main method.
 fn try_main() -> Result<(), String> {
     let mut board = analyze_stdin(get_stdin_lines()?)?;
     board.solve()?;
     Ok(())
 }
 
+/// Wrap `try_main`.  If an error is encountered, print it to `stderr` and exit with code 1.
 fn main() {
     match try_main() {
         Ok(()) => (),

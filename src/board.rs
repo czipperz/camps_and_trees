@@ -1,16 +1,32 @@
 use grid::*;
 use std::fmt;
+use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
-use tile::Tile::*;
 
+/// The game `Board`.
+///
+/// This automatically dereferences to the field `grid` for easier
+/// usage.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Board {
+    /// The number of `Camp`s on every row.
     pub rows: Vec<usize>,
+    /// The number of `Camp`s on every column.
     pub columns: Vec<usize>,
+    /// The `Grid` of `Tile`s.
     pub grid: Grid,
+    marker: PhantomData<()>,
 }
 
 impl Board {
+    /// Create a new `Board`.
+    ///
+    /// # Panics
+    ///
+    /// This will ensure that the `Grid` is of a valid size and
+    /// `panic` if it isn't.  That is if the length of `rows` is
+    /// different than the number of rows in the `grid`, or the same
+    /// for `columns`.
     pub fn new(rows: Vec<usize>, columns: Vec<usize>, grid: Grid) -> Self {
         assert_eq!(grid.array.len(), rows.len());
         assert!(grid.array.iter().all(|r| r.len() == rows.len()));
@@ -18,18 +34,37 @@ impl Board {
             rows,
             columns,
             grid,
+            marker: PhantomData,
         }
     }
 
+    /// Create a new `Board` by parsing a string as the `Grid`.
+    ///
+    /// This method wraps a call to [`Grid::parse`] and [`Board::new`].
+    ///
+    /// # Panics
+    ///
+    /// See [`Board::new`].
+    ///
+    /// [`Grid::parse`]: struct.Grid.html#method.parse
+    /// [`Board::new`]: struct.Board.html#method.new
     pub fn new_parse(rows: Vec<usize>, columns: Vec<usize>, s: &str) -> Result<Self, String> {
         Ok(Self::new(rows, columns, Grid::parse(s)?))
     }
 
+    /// Create a new `Board` with a blank `Grid` of the correct size.
     pub fn new_blank(rows: Vec<usize>, columns: Vec<usize>) -> Self {
         let grid = Grid::blank(rows.len(), columns.len());
         Self::new(rows, columns, grid)
     }
 
+    /// Solve the `Board` in place.
+    ///
+    /// # Errors
+    ///
+    /// If the `Board` cannot be solved automatically, an `Err` is
+    /// returned.  The `Board` will be populated with as much
+    /// information as can be deduced automatically.
     pub fn solve(&mut self) -> Result<(), String> {
         use associate_trees::*;
         use fill_camps::*;
@@ -81,6 +116,7 @@ impl DerefMut for Board {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tile::Tile::*;
 
     #[test]
     fn debug_test() {

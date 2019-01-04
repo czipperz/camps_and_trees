@@ -2,6 +2,19 @@ use board::*;
 use grid::*;
 use tile::Tile::*;
 
+/// Process a single row of the `Grid`.
+///
+/// # Steps
+///
+/// 1. If `count == 0` then push `grid` onto `possibilities` and
+///    return.
+/// 2. If `column == grid.num_columns()` then simply return.  This is
+///    because there weren't enough [`Camp`]s placed for this
+///    possibility to be valid.
+/// 3. Otherwise, try putting a [`Camp`] at `(row, column)`.  If that
+///    succeeds, recurse into `(row, column + 1)` with that grid.
+/// 4. Recurse into `(row, column + 1)` without placing a [`Camp`] at
+///    `(row, column)`.
 fn process_row(possibilities: &mut Vec<Grid>, grid: Grid, count: usize, row: usize, column: usize) {
     if count == 0 {
         possibilities.push(grid);
@@ -19,6 +32,7 @@ fn process_row(possibilities: &mut Vec<Grid>, grid: Grid, count: usize, row: usi
     process_row(possibilities, grid, count, row, column + 1)
 }
 
+/// See documentation for `process_row`.
 fn process_column(
     possibilities: &mut Vec<Grid>,
     grid: Grid,
@@ -42,6 +56,15 @@ fn process_column(
     process_column(possibilities, grid, count, row + 1, column)
 }
 
+/// Find the intersection of all possibilities.
+///
+/// If a [`Tile`] has the same value throughout each possibility, then
+/// that [`Tile`] is yielded the same way in the resulting [`Grid`].
+/// If it varies, then it is [`Unassigned`].
+///
+/// [`Tile`]: enum.Tile.html
+/// [`Grid`]: struct.Grid.html
+/// [`Unassigned`]: enum.Tile.html#variant.Unassigned
 fn intersection(possibilities: Vec<Grid>) -> Grid {
     let mut possibilities = possibilities.into_iter();
     let mut grid = possibilities.next().unwrap();

@@ -1,17 +1,26 @@
 use grid::*;
 use tile::Tile::*;
 
+/// The association of a certain `Tile`.
+///
+/// This tells us if there is a tree
 #[derive(Clone, PartialEq, Eq, Debug)]
 enum Association {
+    /// This `Tile` is a `Tree` with an associated `Camp` at `(row, column)`.
     CampAt(usize, usize),
+    /// This `Tile` is a `Tree` with no associated `Camp`.
     NoCampAssociated,
+    /// This `Tile` is a `Camp` with no associated `Tree`.
     UnassignedCamp,
+    /// This `Tile` is a `Camp` with an associated `Tree` or `Grass` or `Unspecified`.
     NoTree,
+    /// This `Tile` has not yet been processed.
     Unprocessed,
 }
 use self::Association::*;
 
 impl Association {
+    /// True if `self` is a `CampAt`.
     fn is_camp_at(&self) -> bool {
         match self {
             CampAt(_, _) => true,
@@ -20,6 +29,7 @@ impl Association {
     }
 }
 
+/// Call `associate_tree` for each `surrounding_tile`.
 fn associate_surrounding_trees(
     grid: &Grid,
     row: usize,
@@ -31,6 +41,7 @@ fn associate_surrounding_trees(
     }
 }
 
+/// Populate the `associations` table for the `Tile` at `(row, column)`.
 fn associate_tree(
     grid: &Grid,
     row: usize,
@@ -52,6 +63,9 @@ fn associate_tree(
                 .collect();
             assert!(trees.len() >= 1);
             assert!(trees.len() <= 4);
+            // If there is exactly one Tree next to this Camp, then we
+            // associate ourselves with it.  Otherwise it can be
+            // ambiguous.
             if trees.len() == 1 {
                 let (r, c) = trees[0];
                 assert_eq!(associations[r][c], NoCampAssociated);
@@ -64,11 +78,37 @@ fn associate_tree(
     }
 }
 
+/// Generate the initial associations table.
 fn generate_associations(rows: usize, columns: usize) -> Vec<Vec<Association>> {
     vec![vec![Association::Unprocessed; columns]; rows]
 }
 
-/// Associate `Tree`s with `Camp`s and fill in `Grass` around booked `Tree`s.
+/// Associate `Tree`s with `Camp`s and fill in `Grass` around booked
+/// `Tree`s.
+///
+///
+/// # Examples
+///
+/// This resolves the problem of a `Camp` being placed next to a
+/// `Tree` without the space on the other side being turned to
+/// `Grass`:
+///
+/// ```
+/// # use camps_and_trees::{Grid, associate_trees};
+/// let mut grid = Grid::parse("---\n TC\n---").unwrap();
+/// associate_trees(&mut grid);
+/// assert_eq!(grid, Grid::parse("---\n-TC\n---").unwrap());
+/// ```
+///
+/// However it also acts conservatively, not filling in `Grass` unless
+/// it can show it to be needed:
+///
+/// ```
+/// # use camps_and_trees::{Grid, associate_trees};
+/// let mut grid = Grid::parse("T--\n TC\nT--").unwrap();
+/// associate_trees(&mut grid);
+/// assert_eq!(grid, Grid::parse("T--\n TC\nT--").unwrap());
+/// ```
 pub fn associate_trees(grid: &mut Grid) -> bool {
     let mut changed = false;
     let mut associations: Vec<Vec<Association>> =

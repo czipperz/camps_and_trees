@@ -2,16 +2,38 @@ use std::fmt;
 use std::ops::{Index, IndexMut};
 use tile::Tile::{self, *};
 
+/// A `Grid` of [`Tile`]s.
+///
+/// [`Tile`]: enum.Tile.html
 #[derive(Clone, PartialEq, Eq)]
 pub struct Grid {
     pub array: Vec<Vec<Tile>>,
 }
 
 impl Grid {
+    /// Create a new `Grid` from a table of `Tile`s.
     pub fn new(array: Vec<Vec<Tile>>) -> Grid {
         Grid { array }
     }
 
+    /// Create a new `Grid` by parsing the string.
+    ///
+    /// This parses characters via [`Tile::parse`] and `\n` as the
+    /// start of the next row.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use camps_and_trees::{Grid, Tile::*};
+    /// assert_eq!(
+    ///    Grid::parse("TC-\n - \n---"),
+    ///    Ok(vec![
+    ///        vec![Tree, Camp, Grass],
+    ///        vec![Unassigned, Grass, Unassigned],
+    ///        vec![Grass, Grass, Grass]
+    ///    ].into())
+    /// );
+    /// ```
     pub fn parse(s: &str) -> Result<Grid, String> {
         let mut grid = Vec::new();
         let mut row = Vec::new();
@@ -27,14 +49,31 @@ impl Grid {
         Ok(grid.into())
     }
 
+    /// Create a new blank `Grid` of given dimensions.
+    ///
+    /// Every element of this `Grid` is [`Unassigned`].
+    ///
+    /// [`Unassigned`]: enum.Tile.html#variant.Unassigned
     pub fn blank(rows: usize, columns: usize) -> Grid {
         vec![vec![Tile::Unassigned; columns]; rows].into()
     }
 
+    /// Get the `Tile` at `(row, column)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns `None` if the coordinates are out of bounds.
+    ///
+    /// If you are sure the coordinates are in bounds, use the `Index`
+    /// operator: `grid[(row, column)]`.
     pub fn get(&self, row: usize, column: usize) -> Option<Tile> {
         self.array.get(row).and_then(|r| r.get(column).cloned())
     }
 
+    /// Set the [`Tile`] at `(row, column)` to a [`Camp`].
+    ///
+    /// [`Tile`]: enum.Tile.html
+    /// [`Camp`]: enum.Tile.html#variant.Camp
     pub fn set_camp(&mut self, row: usize, column: usize) -> Result<(), String> {
         for r in row.saturating_sub(1)..=row + 1 {
             for c in column.saturating_sub(1)..=column + 1 {
@@ -57,15 +96,25 @@ impl Grid {
         Ok(())
     }
 
+    /// Get the number of rows in the `Grid`.
     pub fn num_rows(&self) -> usize {
         self.array.len()
     }
 
+    /// Get the number of columns in the `Grid`.
     pub fn num_columns(&self) -> usize {
         self.array.get(0).map(|x| x.len()).unwrap_or(0)
     }
 
+    /// Get the number of `Tile`s equal to `tile` in the given row.
+    ///
+    /// # Panics
+    ///
+    /// This will `panic` if `row >= num_rows()`.
     pub fn count_in_row(&self, row: usize, tile: Tile) -> usize {
+        // because of the strong guarantees of Vec, this check isn't
+        // necessary, but it does make it easier to debug.
+        debug_assert!(row < self.num_rows());
         let mut count = 0;
         for column in 0..self.num_columns() {
             if self[(row, column)] == tile {
@@ -75,7 +124,15 @@ impl Grid {
         count
     }
 
+    /// Get the number of `Tile`s equal to `tile` in the given column.
+    ///
+    /// # Panics
+    ///
+    /// This will `panic` if `column >= num_columns()`.
     pub fn count_in_column(&self, column: usize, tile: Tile) -> usize {
+        // because of the strong guarantees of Vec, this check isn't
+        // necessary, but it does make it easier to debug.
+        debug_assert!(column < self.num_columns());
         let mut count = 0;
         for row in 0..self.num_rows() {
             if self[(row, column)] == tile {
@@ -85,13 +142,60 @@ impl Grid {
         count
     }
 
+    /// Get the [`Tile`]s that surround the [`Tile`] at `(row, column)`.
+    ///
+    /// This will return the points inside the `Grid` with `row +- 1`
+    /// *or* `column +- 1`.
+    ///
+    /// If a [`Camp`] is at `(row, column)`, this will return all
+    /// coordinates an associated [`Forest`] could be at.
+    ///
+    /// # Examples
+    ///
+    /// Corners will return the two coordinates inside the `Grid`:
+    ///
+    /// ```
+    /// # use camps_and_trees::Grid;
+    /// assert_eq!(
+    ///     Grid::blank(3, 3).surrounding_tiles(0, 0),
+    ///     vec![(0, 1), (1, 0)]
+    /// );
+    /// ```
+    ///
+    /// Edges will crop out the coordinate outside them (in this case
+    /// `(-1, 1)`):
+    ///
+    /// ```
+    /// # use camps_and_trees::Grid;
+    /// assert_eq!(
+    ///     Grid::blank(3, 3).surrounding_tiles(0, 1),
+    ///     vec![(0, 0), (0, 2), (1, 1)]
+    /// );
+    /// ```
+    ///
+    /// Coordinates in the middle will return all four:
+    ///
+    /// ```
+    /// # use camps_and_trees::Grid;
+    /// assert_eq!(
+    ///     Grid::blank(3, 3).surrounding_tiles(1, 1),
+    ///     vec![(0, 1), (1, 0), (1, 2), (2, 1)]
+    /// );
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if `(row, column)` is outside the
+    /// `Grid`.
+    ///
+    /// [`Tile`]: enum.Tile.html
+    /// [`Forest`]: enum.Tile.html#variant.Forest
+    /// [`Camp`]: enum.Tile.html#variant.Camp
     pub fn surrounding_tiles(&self, row: usize, column: usize) -> Vec<(usize, usize)> {
+        assert!(self.get(row, column).is_some());
         let mut vec = Vec::new();
         if row != 0 {
             vec.push((row - 1, column));
-        }
-        if row + 1 != self.num_rows() {
-            vec.push((row + 1, column));
         }
         if column != 0 {
             vec.push((row, column - 1));
@@ -99,13 +203,34 @@ impl Grid {
         if column + 1 != self.num_columns() {
             vec.push((row, column + 1));
         }
+        if row + 1 != self.num_rows() {
+            vec.push((row + 1, column));
+        }
         vec
     }
 
+    /// Format the `Grid` in debug mode.
+    ///
+    /// This is a convenience method similar to `to_string`.
     pub fn debug(&self) -> String {
         format!("{:?}", self)
     }
 
+    /// Is every [`Tile`] not [`Unassigned`]?
+    ///
+    /// # Remarks
+    ///
+    /// This method purely tests if the `Grid` has been solved, *not
+    /// that it has been solved correctly*.  More advanced analysis is
+    /// required for that.
+    ///
+    /// [`Board::solve`] uses this to determine whether to return an
+    /// error or not.  This is because `solve` always correctly solves
+    /// `Board`s so long as they didn't start in an incorrect state.
+    ///
+    /// [`Tile`]: enum.Tile.html
+    /// [`Unassigned`]: enum.Tile.html#variant.Unassigned
+    /// [`Board::solve`]: struct.Board.html#method.solve
     pub fn is_solved(&self) -> bool {
         self.array
             .iter()
@@ -149,6 +274,30 @@ impl fmt::Debug for Grid {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parse_grid_test() {
+        assert_eq!(
+            Grid::parse("TC-\n - \n---"),
+            Ok(vec![
+                vec![Tree, Camp, Grass],
+                vec![Unassigned, Grass, Unassigned],
+                vec![Grass, Grass, Grass]
+            ].into())
+        );
+    }
+
+    #[test]
+    fn blank_grid_test() {
+        assert_eq!(
+            Grid::blank(3, 3),
+            vec![
+                vec![Unassigned, Unassigned, Unassigned],
+                vec![Unassigned, Unassigned, Unassigned],
+                vec![Unassigned, Unassigned, Unassigned],
+            ].into()
+        );
+    }
 
     #[test]
     fn debug_test() {
@@ -200,26 +349,50 @@ mod tests {
     }
 
     #[test]
-    fn parse_grid_test() {
+    fn surrounding_tiles_corner() {
         assert_eq!(
-            Grid::parse("TC-\n - \n---"),
-            Ok(vec![
-                vec![Tree, Camp, Grass],
-                vec![Unassigned, Grass, Unassigned],
-                vec![Grass, Grass, Grass]
-            ].into())
+            Grid::blank(3, 3).surrounding_tiles(0, 0),
+            vec![(0, 1), (1, 0)]
+        );
+        assert_eq!(
+            Grid::blank(3, 3).surrounding_tiles(0, 2),
+            vec![(0, 1), (1, 2)]
+        );
+        assert_eq!(
+            Grid::blank(3, 3).surrounding_tiles(2, 0),
+            vec![(1, 0), (2, 1)]
+        );
+        assert_eq!(
+            Grid::blank(3, 3).surrounding_tiles(2, 2),
+            vec![(1, 2), (2, 1)]
         );
     }
 
     #[test]
-    fn blank_grid_test() {
+    fn surrounding_tiles_edge() {
         assert_eq!(
-            Grid::blank(3, 3),
-            vec![
-                vec![Unassigned, Unassigned, Unassigned],
-                vec![Unassigned, Unassigned, Unassigned],
-                vec![Unassigned, Unassigned, Unassigned],
-            ].into()
+            Grid::blank(3, 3).surrounding_tiles(0, 1),
+            vec![(0, 0), (0, 2), (1, 1)]
+        );
+        assert_eq!(
+            Grid::blank(3, 3).surrounding_tiles(1, 0),
+            vec![(0, 0), (1, 1), (2, 0)]
+        );
+        assert_eq!(
+            Grid::blank(3, 3).surrounding_tiles(1, 2),
+            vec![(0, 2), (1, 1), (2, 2)]
+        );
+        assert_eq!(
+            Grid::blank(3, 3).surrounding_tiles(2, 1),
+            vec![(1, 1), (2, 0), (2, 2)]
+        );
+    }
+
+    #[test]
+    fn surrounding_tiles_middle() {
+        assert_eq!(
+            Grid::blank(3, 3).surrounding_tiles(1, 1),
+            vec![(0, 1), (1, 0), (1, 2), (2, 1)]
         );
     }
 
