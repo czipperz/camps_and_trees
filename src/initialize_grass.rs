@@ -11,6 +11,10 @@ use tile::Tile::*;
 /// assert!(initialize_grass(&mut board));
 /// assert_eq!(board.debug(), " T \nT -\n --");
 /// ```
+///
+/// [`Unassigned`]: enum.Tile.html#variant.Unassigned
+/// [`Camp`]: enum.Tile.html#variant.Camp
+/// [`Grass`]: enum.Tile.html#variant.Grass
 pub fn initialize_grass(board: &mut Board) -> bool {
     let mut changed = false;
     for row in 0..board.rows.len() {

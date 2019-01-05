@@ -1,14 +1,14 @@
 use board::*;
 use tile::Tile::*;
 
-/// Fill rows and columns with `Camp`s where there are `Unassigned`
+/// Fill rows and columns with [`Camp`]s where there are [`Unassigned`]
 /// slots.
 ///
 /// Return whether any values were changed.
 ///
 /// # Examples
 ///
-/// Here there are exactly 2 `Unassigned` slots and 2 `Camp`s left to
+/// Here there are exactly 2 [`Unassigned`] slots and 2 [`Camp`]s left to
 /// place so we place them:
 ///
 /// ```
@@ -17,6 +17,9 @@ use tile::Tile::*;
 /// assert!(fill_camps(&mut board));
 /// assert_eq!(board.debug(), "CTC\nT-T\nCTC");
 /// ```
+///
+/// [`Camp`]: enum.Tile.html#variant.Camp
+/// [`Unassigned`]: enum.Tile.html#variant.Unassigned
 pub fn fill_camps(board: &mut Board) -> bool {
     let mut changed = false;
     for row in 0..board.rows.len() {

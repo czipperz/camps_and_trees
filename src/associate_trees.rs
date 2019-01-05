@@ -83,15 +83,14 @@ fn generate_associations(rows: usize, columns: usize) -> Vec<Vec<Association>> {
     vec![vec![Association::Unprocessed; columns]; rows]
 }
 
-/// Associate `Tree`s with `Camp`s and fill in `Grass` around booked
-/// `Tree`s.
-///
+/// Associate [`Tree`]s with [`Camp`]s and fill in [`Grass`] around
+/// booked [`Tree`]s.
 ///
 /// # Examples
 ///
-/// This resolves the problem of a `Camp` being placed next to a
-/// `Tree` without the space on the other side being turned to
-/// `Grass`:
+/// This resolves the problem of a [`Camp`] being placed next to a
+/// [`Tree`] without the space on the other side being turned to
+/// [`Grass`]:
 ///
 /// ```
 /// # use camps_and_trees::{Grid, associate_trees};
@@ -100,7 +99,7 @@ fn generate_associations(rows: usize, columns: usize) -> Vec<Vec<Association>> {
 /// assert_eq!(grid, Grid::parse("---\n-TC\n---").unwrap());
 /// ```
 ///
-/// However it also acts conservatively, not filling in `Grass` unless
+/// However it also acts conservatively, not filling in [`Grass`] unless
 /// it can show it to be needed:
 ///
 /// ```
@@ -109,6 +108,10 @@ fn generate_associations(rows: usize, columns: usize) -> Vec<Vec<Association>> {
 /// associate_trees(&mut grid);
 /// assert_eq!(grid, Grid::parse("T--\n TC\nT--").unwrap());
 /// ```
+///
+/// [`Tree`]: enum.Tile.html#variant.Tree
+/// [`Camp`]: enum.Tile.html#variant.Camp
+/// [`Grass`]: enum.Tile.html#variant.Grass
 pub fn associate_trees(grid: &mut Grid) -> bool {
     let mut changed = false;
     let mut associations: Vec<Vec<Association>> =

@@ -1,7 +1,7 @@
 use board::*;
 use tile::Tile::*;
 
-/// Fill rows and columns with no remaining `Camp`s with `Grass`.
+/// Fill rows and columns with no remaining [`Camp`]s with [`Grass`].
 ///
 /// Return whether any values were changed.
 ///
@@ -13,6 +13,9 @@ use tile::Tile::*;
 /// assert!(fill_zeros(&mut board));
 /// assert_eq!(board.debug(), " - \n-CC\n - ");
 /// ```
+///
+/// [`Camp`]: enum.Tile.html#variant.Camp
+/// [`Grass`]: enum.Tile.html#variant.Grass
 pub fn fill_zeros(board: &mut Board) -> bool {
     let mut changed = false;
     for row in 0..board.rows.len() {

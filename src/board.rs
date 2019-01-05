@@ -23,10 +23,12 @@ impl Board {
     ///
     /// # Panics
     ///
-    /// This will ensure that the `Grid` is of a valid size and
+    /// This will ensure that the [`Grid`] is of a valid size and
     /// `panic` if it isn't.  That is if the length of `rows` is
     /// different than the number of rows in the `grid`, or the same
     /// for `columns`.
+    ///
+    /// [`Grid`]: struct.Grid.html
     pub fn new(rows: Vec<usize>, columns: Vec<usize>, grid: Grid) -> Self {
         assert_eq!(grid.array.len(), rows.len());
         assert!(grid.array.iter().all(|r| r.len() == rows.len()));
@@ -38,7 +40,7 @@ impl Board {
         }
     }
 
-    /// Create a new `Board` by parsing a string as the `Grid`.
+    /// Create a new `Board` by parsing a string as the [`Grid`].
     ///
     /// This method wraps a call to [`Grid::parse`] and [`Board::new`].
     ///
@@ -46,13 +48,20 @@ impl Board {
     ///
     /// See [`Board::new`].
     ///
+    /// [`Grid`]: struct.Grid.html
     /// [`Grid::parse`]: struct.Grid.html#method.parse
     /// [`Board::new`]: struct.Board.html#method.new
     pub fn new_parse(rows: Vec<usize>, columns: Vec<usize>, s: &str) -> Result<Self, String> {
         Ok(Self::new(rows, columns, Grid::parse(s)?))
     }
 
-    /// Create a new `Board` with a blank `Grid` of the correct size.
+    /// Create a new `Board` with a blank [`Grid`] of the correct size.
+    ///
+    /// This method wraps a call to [`Grid::blank`] and [`Board::new`].
+    ///
+    /// [`Grid`]: struct.Grid.html
+    /// [`Grid::parse`]: struct.Grid.html#method.parse
+    /// [`Board::new`]: struct.Board.html#method.new
     pub fn new_blank(rows: Vec<usize>, columns: Vec<usize>) -> Self {
         let grid = Grid::blank(rows.len(), columns.len());
         Self::new(rows, columns, grid)

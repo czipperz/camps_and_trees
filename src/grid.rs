@@ -72,8 +72,17 @@ impl Grid {
 
     /// Set the [`Tile`] at `(row, column)` to a [`Camp`].
     ///
+    /// This will fill the surrounding and diagonal tiles with [`Grass`]
+    ///
+    /// # Errors
+    ///
+    /// If a [`Camp`] is already at a surrounding or diagonal tile,
+    /// then an error is produced.  The `Grid` is not modified on an
+    /// error.
+    ///
     /// [`Tile`]: enum.Tile.html
     /// [`Camp`]: enum.Tile.html#variant.Camp
+    /// [`Grass`]: enum.Tile.html#variant.Grass
     pub fn set_camp(&mut self, row: usize, column: usize) -> Result<(), String> {
         for r in row.saturating_sub(1)..=row + 1 {
             for c in column.saturating_sub(1)..=column + 1 {
